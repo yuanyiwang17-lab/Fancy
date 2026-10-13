@@ -1,15 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronLeft, BookText, Sparkles, Target, Award } from 'lucide-react'
+import { ChevronLeft, BookText, Sparkles, Target } from 'lucide-react'
 import { useExpertStore } from '../store/expertStore'
 import { DomainIcon } from '../components/DomainIcon'
 import { VCard } from '../components/ui'
 
-const LEVEL_LABEL: Record<string, string> = {
-  L1: '执行层 · 行业 / 职能专家',
-  L2: '策略层 · 方法顾问',
-  L3: '决策层 · 统筹终审',
-}
 
 export default function ExpertDetailPage() {
   const { id } = useParams()
@@ -21,7 +16,7 @@ export default function ExpertDetailPage() {
   if (!expert) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-ink-2">
-        <p>未找到该专家</p>
+        <p>未找到该工作角色</p>
         <button onClick={() => navigate('/experts')} className="rounded-btn bg-primary px-5 h-10 text-aux font-medium text-white">
           返回公会
         </button>
@@ -29,7 +24,7 @@ export default function ExpertDetailPage() {
     )
   }
 
-  const peers = experts.filter((e) => e.group === expert.group && e.id !== expert.id).slice(0, 6)
+  const peers = experts.filter((e) => e.id !== expert.id).slice(0, 6)
 
   return (
     <div className="mx-auto max-w-4xl px-8 py-8">
@@ -56,11 +51,10 @@ export default function ExpertDetailPage() {
           <div className="flex items-center gap-2">
             <h1 className="font-serif text-h1 text-ink">{expert.name}</h1>
             <span className="rounded-chip px-2.5 h-6 text-tag font-medium text-ink-2" style={{ background: expert.badge_color }}>
-              {expert.level}
+              {expert.nickname}
             </span>
           </div>
           <div className="mt-1 text-body text-primary-deep">{expert.role_title}</div>
-          <div className="text-tag text-ink-3">{LEVEL_LABEL[expert.level]}</div>
           <p className="mt-3 text-aux leading-relaxed text-ink-2">{expert.one_liner}</p>
         </div>
       </motion.div>
@@ -69,7 +63,7 @@ export default function ExpertDetailPage() {
       <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
         <VCard hover={false}>
           <div className="flex items-center gap-2 text-aux font-semibold text-ink">
-            <Sparkles size={16} className="text-primary" /> 核心技能
+            <Sparkles size={16} className="text-primary" /> 工作方法
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {expert.skills.map((s) => (
@@ -82,7 +76,7 @@ export default function ExpertDetailPage() {
 
         <VCard hover={false}>
           <div className="flex items-center gap-2 text-aux font-semibold text-ink">
-            <Target size={16} className="text-primary" /> 知识标签
+            <Target size={16} className="text-primary" /> 关注内容
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {expert.knowledge_tags.map((t) => (
@@ -95,32 +89,18 @@ export default function ExpertDetailPage() {
 
         <VCard hover={false} className="md:col-span-2">
           <div className="flex items-center gap-2 text-aux font-semibold text-ink">
-            <BookText size={16} className="text-primary" /> 知识库
+            <BookText size={16} className="text-primary" /> 执行约定
           </div>
           <p className="mt-3 text-body leading-relaxed text-ink-2">{expert.knowledge_base}</p>
         </VCard>
 
-        <VCard hover={false} className="md:col-span-2">
-          <div className="flex items-center gap-2 text-aux font-semibold text-ink">
-            <Award size={16} className="text-primary" /> 履历
-          </div>
-          <div className="mt-3 flex gap-8">
-            <div>
-              <div className="font-serif text-h2 text-primary-deep">{expert.stats.missions}</div>
-              <div className="text-tag text-ink-3">累计参与调研</div>
-            </div>
-            <div>
-              <div className="font-serif text-h2 text-primary-deep">{expert.stats.avg_evidence || '—'}</div>
-              <div className="text-tag text-ink-3">平均证据引用</div>
-            </div>
-          </div>
-        </VCard>
+
       </div>
 
       {/* 同组专家 */}
       {peers.length > 0 && (
         <div className="mt-8">
-          <div className="mb-3 text-aux font-semibold text-ink">同组协作专家</div>
+          <div className="mb-3 text-aux font-semibold text-ink">其他工作角色</div>
           <div className="flex flex-wrap gap-3">
             {peers.map((p) => (
               <button

@@ -170,7 +170,7 @@ export default function HomePage() {
           animate="animate"
           className="mt-3 text-lg text-ink-2"
         >
-          你的 AI 竞品分析 Agent —— 48 位专家协作，无证据不立论
+          你的 AI 调研工作台 —— 规划、采集、分析、检查
         </motion.p>
 
         {/* 大输入框 */}
@@ -223,7 +223,7 @@ export default function HomePage() {
             </span>
           </div>
           <div className="mt-2 flex items-center justify-between">
-            <span className="text-tag text-ink-3">48 位专家 · 真实联网 · 无证据不立论</span>
+            <span className="text-tag text-ink-3">4 个工作角色 · 来源可追溯 · 报告带引用</span>
             <div className="flex items-center gap-2">
               <ModelPicker />
               <button
@@ -284,7 +284,7 @@ export default function HomePage() {
               onClick={() => navigate('/experts')}
               className="z-0 ml-1 inline-flex h-9 items-center rounded-chip bg-primary-tint px-3 text-tag font-medium text-primary-deep hover:bg-primary-soft/40"
             >
-              查看全部 48 位 →
+              查看工作分工 →
             </button>
           </div>
         </div>

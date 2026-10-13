@@ -105,7 +105,7 @@ export default function WorkspacePage() {
 
           <div>
             <div className="mb-2 flex items-center gap-1.5 text-aux font-semibold text-ink">
-              <Users size={15} className="text-primary" /> 专家队（{teamMembers.length}）
+              <Users size={15} className="text-primary" /> 工作角色（{teamMembers.length}）
             </div>
             <div className="flex flex-wrap gap-1.5">
               {teamMembers.map((id) => {
@@ -139,7 +139,7 @@ export default function WorkspacePage() {
                 >
                   <Sprout size={32} className="text-primary-soft" />
                 </motion.div>
-                <p className="text-aux">专家队正在集结，马上开始……</p>
+                <p className="text-aux">正在准备调研流程，马上开始……</p>
               </div>
             ) : (
               <VAgentStream thoughts={thoughts} />

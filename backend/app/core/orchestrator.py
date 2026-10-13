@@ -5,7 +5,7 @@
 核心原则（按用户要求）：
 - 真实联网：每个竞品多角度多轮真实搜索（博查 Bocha），真实抓取正文。
 - 真实舆情：site:抖音/小红书/B站/知乎 搜真实评论与真实链接。
-- 真实 LLM 分析：调研计划、专家指派、论点、舆情、报告正文、图表数据全部由 LLM 基于真实证据生成。
+- 真实 LLM 分析：调研计划、论点、舆情、报告正文、图表数据全部由 LLM 基于真实证据生成。
 - 绝不 demo：没有任何写死的假数据/假评论/假图表。搜不到就如实标注"未采集到"，尽力而为不中断。
 - 真实持久化：任务/报告/证据/专家工作量/trace 全部落 SQLite。
 - 全程 trace + 四铁律：无证据不立论 / 交叉验证 / 返工闭环 / 可观测。
@@ -39,7 +39,7 @@ from app.core.schemas import coerce_feature_tree, coerce_pricing_model, coerce_u
 from app.core.search import multi_search
 from app.core.sentiment import analyze_sentiment, PLATFORM_LABEL, PLATFORM_SITES
 from app.core.textquality import is_relevant_content
-from app.data import expert_by_id, load_experts
+from app.data import expert_by_id
 
 _settings = get_settings()
 
@@ -341,61 +341,19 @@ def _regex_brands(query: str) -> List[str]:
     return cand[:4] if cand else ["目标竞品"]
 
 
-# ── 编排：LLM 动态指派专家（含理由）─────────────────────────
+# 固定工作分工；不再为选择角色额外调用模型。
 def _dispatch_experts(query: str, brands: List[str], focus: List[str]) -> Dict[str, Any]:
-    experts = load_experts()
-    roster = [
-        {"id": e["id"], "name": e["name"], "level": e["level"],
-         "role": e["role_title"], "skills": e.get("skills", [])[:3]}
-        for e in experts
-    ]
-    try:
-        data = chat_json(
-            [
-                {"role": "system", "content": (
-                    "你是 Verda 首席指挥官。从专家名册中为本次调研挑选最合适的团队。"
-                    "规则：必须含 1 位 L3 决策层统筹、1-2 位 L2 策略顾问、3-6 位 L1 执行专家。"
-                    "为每位被选专家给出一句具体的指派理由（说明他/她负责什么、为什么适合）。"
-                    '只输出 JSON：{"lead":"专家id","members":[{"id":"专家id","reason":"指派理由"}]}。'
-                )},
-                {"role": "user", "content": (
-                    f"调研主题：{query}\n竞品：{'、'.join(brands)}\n重点维度：{'、'.join(focus)}\n"
-                    f"专家名册：{json.dumps(roster, ensure_ascii=False)}"
-                )},
-            ],
-            max_tokens=2000,
-            temperature=0.4,
-            model=_model("fast"),
-            purpose="动态指派专家团队",
-        )
-        if isinstance(data, dict) and data.get("members"):
-            valid_ids = {e["id"] for e in experts}
-            members = [
-                {"id": m["id"], "reason": m.get("reason", "")}
-                for m in data["members"]
-                if isinstance(m, dict) and m.get("id") in valid_ids
-            ]
-            lead = data.get("lead") if data.get("lead") in valid_ids else None
-            if members:
-                if not lead:
-                    lead = members[0]["id"]
-                return {"lead": lead, "members": members}
-    except Exception:
-        pass
-    fallback = [
-        {"id": "L3-001", "reason": "决策层统筹全局与终审"},
-        {"id": "L2-001", "reason": "战略顾问负责竞争格局判断"},
-        {"id": "L2-002", "reason": "定价顾问负责价格策略拆解"},
-        {"id": "L1-025", "reason": "通用采集专家负责联网取证"},
-        {"id": "L1-030", "reason": "舆情专家负责口碑与情感分析"},
-        {"id": "L3-003", "reason": "质检负责四铁律审裁"},
-    ]
-    return {"lead": "L3-001", "members": fallback}
+    return {"lead": "L3-001", "members": [
+        {"id": "L3-001", "reason": "明确调研对象、范围与研究维度"},
+        {"id": "L1-025", "reason": "搜索网页与舆情资料，整理可追溯证据"},
+        {"id": "L2-001", "reason": "对比证据、分析观点并撰写引用报告"},
+        {"id": "L3-003", "reason": "检查引用与证据覆盖，提出修改建议"},
+    ]}
 
 
 DAG_NODES = [
     {"id": "intake", "label": "需求理解"},
-    {"id": "orchestrator", "label": "编排派遣"},
+    {"id": "orchestrator", "label": "任务分工"},
     {"id": "collect", "label": "证据采集"},
     {"id": "analyze", "label": "交叉分析"},
     {"id": "write", "label": "报告撰写"},
@@ -627,7 +585,7 @@ async def run_pipeline(task_id: str, sub_id: str = "") -> AsyncIterator[Dict[str
     member_ids = [m["id"] for m in dispatch["members"]]
     lead_expert = expert_by_id(dispatch["lead"]) or {}
     yield _ev("thought", {"id": _sid("th"), "kind": "dispatch", "expert": "L3-001",
-                          "text": f"由 {lead_expert.get('name','决策层')} 领衔组建 {len(member_ids)} 人专家队，"
+                          "text": f"由 {lead_expert.get('name','任务规划')} 安排 {len(member_ids)} 个工作角色，"
                                   f"按调研主题精准匹配专长。", "ts": _now()})
     for m in dispatch["members"]:
         ex = expert_by_id(m["id"]) or {}
@@ -640,7 +598,7 @@ async def run_pipeline(task_id: str, sub_id: str = "") -> AsyncIterator[Dict[str
                            receiver="collect", task_type="PRODUCE",
                            payload={"brands": brands, "angles": angles})
     yield _ev("message", {"id": _sid("m"), "kind": "team", "expert": "L3-001",
-                          "members": member_ids, "text": "专家队已就位，开始深度采集。",
+                          "members": member_ids, "text": "工作分工已确定，开始资料采集。",
                           "dispatch": dispatch["members"],
                           "envelope": {"sender": env_collect.sender, "receiver": env_collect.receiver,
                                        "task_type": env_collect.task_type,
@@ -820,9 +778,9 @@ async def run_pipeline(task_id: str, sub_id: str = "") -> AsyncIterator[Dict[str
         yield e
     analysis["structured"] = structured
 
-    yield _ev("thought", {"id": _sid("th"), "kind": "action", "expert": sentiment_expert,
-                          "text": "舆情专家对真实评论做情感分类与观点阵营聚类（占比归一化）……", "ts": _now()})
-    trace.set_context(task_id, sentiment_expert, "analyze", "舆情情感分类与阵营聚类")
+    yield _ev("thought", {"id": _sid("th"), "kind": "action", "expert": analyst,
+                          "text": "分析写作对真实评论做情感分类与观点阵营聚类（占比归一化）……", "ts": _now()})
+    trace.set_context(task_id, analyst, "analyze", "舆情情感分类与阵营聚类")
     sentiment = await asyncio.to_thread(analyze_sentiment, primary_brand, sentiment_comments)
     for e in _drain_trace():
         yield e
@@ -959,7 +917,7 @@ async def run_pipeline(task_id: str, sub_id: str = "") -> AsyncIterator[Dict[str
     yield _ev("progress", prog(70, "audit", len(evidences)))
 
     # ---- 6. write：多模型并行逐章撰写 ----
-    writer = next((m["id"] for m in dispatch["members"] if m["id"] == "L3-002"), dispatch["lead"])
+    writer = analyst
     yield _ev("node_update", {"node": "write", "status": "working", "expert": writer})
     section_ids = list(cfg["sections"])
     # 视角专属板块：插在结论之前（如 销售→销售话术与卖点 / 投资人→增长与壁垒研判）
@@ -1001,7 +959,7 @@ async def run_pipeline(task_id: str, sub_id: str = "") -> AsyncIterator[Dict[str
     # 舆情专章：基于真实评论数据生成多段深度解读（与正文同等深度）
     sentiment_text: Dict[str, Any] = {"paragraphs": [], "key_takeaway": "", "highlights": []}
     if sentiment.get("sample_size"):
-        trace.set_context(task_id, sentiment_expert, "write", "撰写章节「全网舆情与观点阵营」")
+        trace.set_context(task_id, writer, "write", "撰写章节「全网舆情与观点阵营」")
         sentiment_text = await asyncio.to_thread(
             _write_sentiment_narrative, query, brands, sentiment, _model("aux"),
             cfg["min_paragraphs"], cfg["para_words"], cfg["section_max_tokens"],
@@ -1069,7 +1027,7 @@ def _analyze(query, brands, focus, evidences: List[Evidence], members: List[str]
     digest = _evidence_digest(evidences)
     ev_ids = [e.evidence_id for e in evidences]
     domains_by_id = {e.evidence_id: domain_of(e.source_url) for e in evidences}
-    authors = [m for m in members if m.startswith(("L1", "L2"))] or ["L2-001"]
+    authors = ["L2-001"]
     # 返工时把质检官的具体意见注入提示，让重分析真正针对短板调优（而非重抽一遍）
     rework_directive = ""
     if review_feedback:
@@ -1128,7 +1086,7 @@ def _analyze(query, brands, focus, evidences: List[Evidence], members: List[str]
                     continue
                 eids = [i for i in c.get("evidence_ids", []) if i in valid_ids]
                 indep = len({domains_by_id.get(i, "") for i in eids if domains_by_id.get(i)})
-                author = c.get("author") if c.get("author") in members else authors[0]
+                author = c.get("author") if c.get("author") in authors else authors[0]
                 claims.append(make_claim(_sid("c"), c["text"], c.get("field", "overview"),
                                          eids, author, indep).to_dict())
             if claims:

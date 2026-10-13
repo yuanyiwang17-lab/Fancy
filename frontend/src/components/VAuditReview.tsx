@@ -32,7 +32,7 @@ export function VAuditReview({ review }: { review?: AuditReview }) {
         </span>
         <div className="flex-1">
           <div className="text-aux font-semibold text-ink">质检审裁 · 质检官终审意见</div>
-          <div className="text-tag text-ink-3">L3 决策层对分析产物逐维度评分、指出问题并给出可执行改进建议</div>
+          <div className="text-tag text-ink-3">质量检查对分析结果逐维度评分、指出问题并给出修改建议</div>
         </div>
         <span className={`rounded-chip px-3 py-1 text-tag font-semibold ${
           verdictPass ? 'bg-ok/15 text-ok' : 'bg-risk/15 text-risk'

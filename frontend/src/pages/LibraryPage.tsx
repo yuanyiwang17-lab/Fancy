@@ -45,7 +45,7 @@ export default function LibraryPage() {
           />
           <div>
             <div className="text-h3 text-ink">{PUBLIC_READ_ONLY ? '暂未发布公开报告' : '还没有调研记录'}</div>
-            <p className="mt-1 text-aux text-ink-2">{PUBLIC_READ_ONLY ? '本机调研记录不会自动出现在公开展示版中。' : '发起你的第一次竞品分析，48 位专家即刻就位'}</p>
+            <p className="mt-1 text-aux text-ink-2">{PUBLIC_READ_ONLY ? '本机调研记录不会自动出现在公开展示版中。' : '发起你的第一次竞品分析，四个工作角色按流程协作'}</p>
           </div>
           <button
             onClick={() => navigate('/')}

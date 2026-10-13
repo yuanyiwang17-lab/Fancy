@@ -7,13 +7,6 @@ import { DomainIcon } from '../components/DomainIcon'
 import { fadeUp, stagger } from '../lib/motion'
 import type { Expert, ExpertLevel } from '../types'
 
-const LEVEL_TABS: { key: ExpertLevel | 'all'; label: string; desc: string }[] = [
-  { key: 'all', label: '全部', desc: '48 位专家' },
-  { key: 'L3', label: '决策层', desc: '3 位 · 统筹终审' },
-  { key: 'L2', label: '策略层', desc: '9 位 · 方法顾问' },
-  { key: 'L1', label: '执行层', desc: '36 位 · 行业职能' },
-]
-
 const LEVEL_BG: Record<ExpertLevel, string> = {
   L1: 'bg-[#EAF1EA]',
   L2: 'bg-[#FBF6E9]',
@@ -28,7 +21,7 @@ function ExpertCard({ expert, onClick }: { expert: Expert; onClick: () => void }
       className="group relative flex flex-col items-center rounded-card border border-line/60 bg-card p-4 text-center shadow-card transition-all hover:-translate-y-1 hover:shadow-float"
     >
       <span className={`absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-chip px-2 h-5 text-tag font-medium text-ink-2 ${LEVEL_BG[expert.level]}`}>
-        {expert.level}
+        {expert.nickname}
       </span>
       <div className="relative">
         <img
@@ -50,12 +43,12 @@ function ExpertCard({ expert, onClick }: { expert: Expert; onClick: () => void }
 export default function ExpertsPage() {
   const navigate = useNavigate()
   const experts = useExpertStore((s) => s.experts)
-  const [tab, setTab] = useState<ExpertLevel | 'all'>('all')
+  const [tab, setTab] = useState('all')
   const [kw, setKw] = useState('')
 
   const filtered = useMemo(() => {
     return experts.filter((e) => {
-      const okLevel = tab === 'all' || e.level === tab
+      const okLevel = tab === 'all' || e.id === tab
       const okKw =
         !kw ||
         e.name.includes(kw) ||
@@ -70,7 +63,7 @@ export default function ExpertsPage() {
     <div className="mx-auto max-w-content px-8 py-8">
       <header className="flex flex-col gap-1">
         <h1 className="font-serif text-h1 text-ink">专家公会</h1>
-        <p className="text-aux text-ink-2">48 位 AI 竞品分析专家 · 三层协作架构 · 决策 / 策略 / 执行</p>
+        <p className="text-aux text-ink-2">{experts.length} 个工作角色 · 任务规划 / 资料采集 / 分析写作 / 质量检查</p>
       </header>
 
       {/* 搜索 + tab */}
@@ -80,12 +73,12 @@ export default function ExpertsPage() {
           <input
             value={kw}
             onChange={(e) => setKw(e.target.value)}
-            placeholder="搜索专家、技能或知识标签"
+            placeholder="搜索角色、工作方法或产出"
             className="w-56 bg-transparent text-aux text-ink outline-none placeholder:text-ink-3"
           />
         </div>
         <div className="flex gap-1.5">
-          {LEVEL_TABS.map((t) => (
+          {[{ key: 'all', label: '全部', desc: `${experts.length} 个角色` }, ...experts.map((e) => ({ key: e.id, label: e.name, desc: e.nickname }))].map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
@@ -106,7 +99,7 @@ export default function ExpertsPage() {
         variants={stagger}
         initial="initial"
         animate="animate"
-        className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+        className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         {filtered.map((e) => (
           <ExpertCard key={e.id} expert={e} onClick={() => navigate(`/experts/${e.id}`)} />
@@ -114,7 +107,7 @@ export default function ExpertsPage() {
       </motion.div>
 
       {filtered.length === 0 && (
-        <div className="py-16 text-center text-ink-3">未找到匹配的专家</div>
+        <div className="py-16 text-center text-ink-3">未找到匹配的工作角色</div>
       )}
     </div>
   )

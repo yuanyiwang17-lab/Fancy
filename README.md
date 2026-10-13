@@ -4,6 +4,10 @@ Fancy AI research workspace
 
 Fancy 的公开展示版本，基于 [kangjiayao14/VerdaAI-Investigator](https://github.com/kangjiayao14/VerdaAI-Investigator) 改编，遵循仓库中的 AGPL-3.0 许可证。
 
+## 工作分工
+
+Fancy 使用四个固定工作角色：任务规划、资料采集、分析写作、质量检查。联网资料和舆情统一由采集负责，分析与报告由分析写作负责，质量检查保留引用核验与返工流程。选择工作角色不额外调用模型。页面中的工作方法说明实际流程，角色介绍不再展示虚构履历。
+
 ## 公网模式
 
 访客可以浏览页面、专家资料和已公开的报告。服务端默认启用 `FANCY_PUBLIC_READ_ONLY=true`，关闭新调研、模型调用、搜索、报告深化及 API 写操作。前端构建启用 `VITE_PUBLIC_READ_ONLY=true`。

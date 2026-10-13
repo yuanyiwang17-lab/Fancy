@@ -30,7 +30,7 @@ async function safeJson<T>(path: string, init?: RequestInit, fallback?: T): Prom
   }
 }
 
-/* 48 专家：优先后端，失败回退本地 JSON（绝不白屏） */
+/* 工作角色：优先后端，失败回退本地 JSON（绝不白屏） */
 export async function fetchExperts(): Promise<Expert[]> {
   if (PUBLIC_READ_ONLY) {
     const local = await fetch(publicAsset('/assets/experts.json'))

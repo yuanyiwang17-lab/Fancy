@@ -1,4 +1,4 @@
-"""48 专家数据加载（前后端共用同一份 experts.json）。"""
+"""四个工作角色数据加载（前后端共用同一份 experts.json）。"""
 from __future__ import annotations
 
 import json

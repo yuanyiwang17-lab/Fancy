@@ -76,7 +76,7 @@ export default function ClarifyPage() {
           </span>
           <div>
             <div className="text-h3 text-ink">在开始前，请确认几个关键点</div>
-            <div className="text-aux text-ink-2">这能帮助专家队更精准地锁定调研范围</div>
+            <div className="text-aux text-ink-2">这能帮助调研流程更精准地锁定范围</div>
           </div>
         </motion.div>
 
@@ -170,7 +170,7 @@ export default function ClarifyPage() {
             disabled={submitting}
             className="inline-flex items-center justify-center gap-2 rounded-btn bg-primary px-6 h-12 font-medium text-white shadow-card transition-all hover:bg-primary-deep hover:shadow-float active:scale-95 disabled:opacity-50"
           >
-            {submitting ? '正在派遣专家队…' : '启动调研'}
+            {submitting ? '正在准备调研流程…' : '启动调研'}
             <ArrowRight size={18} />
           </button>
         </div>
