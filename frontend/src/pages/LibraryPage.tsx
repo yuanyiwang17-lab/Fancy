@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FileText, Plus, Clock, Network, ShieldCheck } from 'lucide-react'
 import { fetchReports } from '../lib/api'
+import { PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
 import type { ReportCard } from '../types'
 import { fadeUp, stagger } from '../lib/motion'
 
@@ -28,7 +29,7 @@ export default function LibraryPage() {
           onClick={() => navigate('/')}
           className="inline-flex items-center gap-2 rounded-btn bg-primary px-5 h-11 font-medium text-white shadow-card transition-all hover:bg-primary-deep hover:shadow-float"
         >
-          <Plus size={18} /> 发起新调研
+          <Plus size={18} /> {PUBLIC_READ_ONLY ? '返回工作台' : '发起新调研'}
         </button>
       </header>
 
@@ -43,14 +44,14 @@ export default function LibraryPage() {
             onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
           />
           <div>
-            <div className="text-h3 text-ink">还没有调研记录</div>
-            <p className="mt-1 text-aux text-ink-2">发起你的第一次竞品分析，48 位专家即刻就位</p>
+            <div className="text-h3 text-ink">{PUBLIC_READ_ONLY ? '暂未发布公开报告' : '还没有调研记录'}</div>
+            <p className="mt-1 text-aux text-ink-2">{PUBLIC_READ_ONLY ? '本机调研记录不会自动出现在公开展示版中。' : '发起你的第一次竞品分析，48 位专家即刻就位'}</p>
           </div>
           <button
             onClick={() => navigate('/')}
             className="inline-flex items-center gap-2 rounded-btn bg-primary px-6 h-11 font-medium text-white shadow-card hover:bg-primary-deep"
           >
-            <Plus size={18} /> 开始调研
+            <Plus size={18} /> {PUBLIC_READ_ONLY ? '返回工作台' : '开始调研'}
           </button>
         </div>
       ) : (
@@ -103,4 +104,3 @@ export default function LibraryPage() {
     </div>
   )
 }
-import { publicAsset } from '../lib/deployment'

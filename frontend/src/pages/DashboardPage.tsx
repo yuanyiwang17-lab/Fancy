@@ -10,6 +10,7 @@ import {
   fetchDashboard, fetchEvidences, fetchSubscriptions,
   createSubscription, deleteSubscription, fetchWorkload,
 } from '../lib/api'
+import { PUBLIC_READ_ONLY } from '../lib/deployment'
 import type {
   DashboardStats, EvidenceQueryResp, EvidenceRecord, Subscription, ExpertWorkload,
 } from '../types'
@@ -188,12 +189,12 @@ export default function DashboardPage() {
       ) : empty ? (
         <div className="mt-16 flex flex-col items-center gap-3 text-center">
           <div className="text-h3 text-ink">情报库还是空的</div>
-          <p className="text-aux text-ink-2">完成第一次调研后，这里会自动沉淀竞品情报、证据溯源与信源结构</p>
+          <p className="text-aux text-ink-2">{PUBLIC_READ_ONLY ? '当前为公开展示版，尚未发布情报数据。' : '完成第一次调研后，这里会自动沉淀竞品情报、证据溯源与信源结构'}</p>
           <button
             onClick={() => navigate('/')}
             className="mt-2 inline-flex items-center gap-2 rounded-btn bg-primary px-6 h-11 font-medium text-white shadow-card hover:bg-primary-deep"
           >
-            发起新调研
+            {PUBLIC_READ_ONLY ? '返回工作台' : '发起新调研'}
           </button>
         </div>
       ) : (
