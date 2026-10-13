@@ -1,6 +1,10 @@
 # Fancy 公网部署
 
-`Dockerfile` 将 React 前端与 FastAPI 后端构建为一个服务。同一个公网域名提供网页、API 和任务流；`/health` 用作健康检查。
+当前公网方案使用 Render Static Site，仅发布 React 页面和公开素材，不启动后端，也不配置任何 API 密钥。本机报告和数据库不随源码公开。
+
+静态构建命令：`npm --prefix frontend ci && VITE_PUBLIC_READ_ONLY=true npm --prefix frontend run build`。发布目录：`frontend/dist`。配置 `/*` 到 `/index.html` 的 Rewrite，以支持报告和专家页等前端路由。
+
+以下容器方案保留给未来需要服务端的部署，当前静态站点不使用它。
 
 ## 容器服务器
 
@@ -26,8 +30,8 @@ docker compose up -d --build
 
 ## 已选的首次上线方案：Render 免费试运行
 
-`render.yaml` 配置了一个免费 Docker Web Service，所有访客都能浏览公开内容，不能发起调研。不向 Render 上传或配置 `ZHIPU_API_KEY`、`BOCHA_API_KEY`。
+`render.yaml` 配置了静态站点。所有访客都能浏览公开内容，不能发起调研。不向 Render 上传或配置 `ZHIPU_API_KEY`、`BOCHA_API_KEY`。
 
-免费服务没有持久磁盘：本版本的数据库会在服务重启或重新部署时丢失。长期运行时应升级持久存储或迁移到外部数据库。免费实例闲置后可能休眠，首次访问需要等待启动。
+静态站点不连接数据库，展示页从静态素材读取专家信息。报告列表初始为空，已有本机报告没有自动发布。
 
-部署顺序：注册 Render、将当前 Fancy 版本放入独立 Git 仓库、在 Render 创建 Blueprint 并选择该仓库、确认免费计划并部署。服务上线后 Render 提供 HTTPS 公网地址。
+部署顺序：注册 Render、将当前 Fancy 版本放入独立 Git 仓库、创建 Static Site、填写构建命令和发布目录、部署并添加前端路由 Rewrite。服务上线后 Render 提供 HTTPS 公网地址。

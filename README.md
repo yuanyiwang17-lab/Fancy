@@ -12,9 +12,9 @@ Fancy 的公开展示版本，基于 [kangjiayao14/VerdaAI-Investigator](https:/
 
 ## Render 免费部署
 
-在 Render 创建 Blueprint 并选择本仓库。`render.yaml` 配置了一个免费 Docker Web Service，部署成功后提供 HTTPS 公网网址。无需另外购买服务器。
+在 Render 创建 Static Site 并选择本仓库。构建命令为 `npm --prefix frontend ci && VITE_PUBLIC_READ_ONLY=true npm --prefix frontend run build`，发布目录为 `frontend/dist`。`render.yaml` 也提供相应静态站点配置。
 
-免费实例可能休眠；服务重启或重新部署会清除临时数据库。详细配置见 [PUBLIC_DEPLOYMENT.md](docs/PUBLIC_DEPLOYMENT.md)。
+公网部署仅托管静态页面和公开专家素材，不运行后端，不连接本机 API 或报告数据库。已有私有报告没有自动发布。详细配置见 [PUBLIC_DEPLOYMENT.md](docs/PUBLIC_DEPLOYMENT.md)。
 
 ## 容器运行
 

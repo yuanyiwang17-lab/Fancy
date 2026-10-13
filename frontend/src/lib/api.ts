@@ -16,6 +16,10 @@ import { PUBLIC_READ_ONLY } from './deployment'
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
 async function safeJson<T>(path: string, init?: RequestInit, fallback?: T): Promise<T> {
+  if (PUBLIC_READ_ONLY) {
+    if (fallback !== undefined) return fallback
+    throw new Error('公开展示版未开放此操作')
+  }
   try {
     const r = await fetch(`${API_BASE}${path}`, init)
     if (!r.ok) throw new Error(`HTTP ${r.status}`)
@@ -28,6 +32,10 @@ async function safeJson<T>(path: string, init?: RequestInit, fallback?: T): Prom
 
 /* 48 专家：优先后端，失败回退本地 JSON（绝不白屏） */
 export async function fetchExperts(): Promise<Expert[]> {
+  if (PUBLIC_READ_ONLY) {
+    const local = await fetch('/assets/experts.json')
+    return (await local.json()) as Expert[]
+  }
   try {
     const r = await fetch(`${API_BASE}/api/experts`)
     if (r.ok) {
@@ -43,6 +51,7 @@ export async function fetchExperts(): Promise<Expert[]> {
 }
 
 export async function createTask(query: string, mode: string = 'deep'): Promise<CreateTaskResp> {
+  if (PUBLIC_READ_ONLY) throw new Error('公开展示版未开放新调研')
   return safeJson<CreateTaskResp>(
     '/api/tasks',
     {
