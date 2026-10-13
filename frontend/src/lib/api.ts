@@ -11,7 +11,7 @@ import type {
   Subscription,
   TraceSpan,
 } from '../types'
-import { PUBLIC_READ_ONLY } from './deployment'
+import { PUBLIC_READ_ONLY, publicAsset } from './deployment'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
@@ -33,8 +33,9 @@ async function safeJson<T>(path: string, init?: RequestInit, fallback?: T): Prom
 /* 48 专家：优先后端，失败回退本地 JSON（绝不白屏） */
 export async function fetchExperts(): Promise<Expert[]> {
   if (PUBLIC_READ_ONLY) {
-    const local = await fetch('/assets/experts.json')
-    return (await local.json()) as Expert[]
+    const local = await fetch(publicAsset('/assets/experts.json'))
+    const experts = (await local.json()) as Expert[]
+    return experts.map((expert) => ({ ...expert, avatar: expert.avatar.startsWith('/') ? publicAsset(expert.avatar) : expert.avatar }))
   }
   try {
     const r = await fetch(`${API_BASE}/api/experts`)
@@ -46,7 +47,7 @@ export async function fetchExperts(): Promise<Expert[]> {
   } catch {
     /* fall through */
   }
-  const local = await fetch('/assets/experts.json')
+  const local = await fetch(publicAsset('/assets/experts.json'))
   return (await local.json()) as Expert[]
 }
 

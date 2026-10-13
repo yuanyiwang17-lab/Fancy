@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import AppLayout from './layout/AppLayout'
 import HomePage from './pages/HomePage'
@@ -13,6 +13,9 @@ import LibraryPage from './pages/LibraryPage'
 import DashboardPage from './pages/DashboardPage'
 import KnowledgePage from './pages/KnowledgePage'
 import { useExpertStore } from './store/expertStore'
+import { PUBLIC_READ_ONLY } from './lib/deployment'
+
+const Router = PUBLIC_READ_ONLY ? HashRouter : BrowserRouter
 
 export default function App() {
   const load = useExpertStore((s) => s.load)
@@ -21,7 +24,7 @@ export default function App() {
   }, [load])
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         {/* 带侧边栏框架的页面 */}
         <Route element={<AppLayout />}>
@@ -42,6 +45,6 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   )
 }

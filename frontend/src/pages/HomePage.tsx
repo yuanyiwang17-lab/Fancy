@@ -21,7 +21,7 @@ import { fadeUp, stagger } from '../lib/motion'
 import { useUIStore } from '../store/uiStore'
 import { useExpertStore } from '../store/expertStore'
 import { createTask } from '../lib/api'
-import { PUBLIC_READ_ONLY } from '../lib/deployment'
+import { PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
 
 const MODELS = ['Auto', 'GLM-5.2', 'GLM-5.1', 'GLM-Z1-Air', 'GLM-4-Plus']
 
@@ -132,7 +132,7 @@ export default function HomePage() {
       <div
         className="pointer-events-none absolute inset-0 -z-0 opacity-[0.5]"
         style={{
-          backgroundImage: 'url(/assets/brand/hero-bg.png)',
+          backgroundImage: `url(${publicAsset('/assets/brand/hero-bg.png')})`,
           backgroundSize: 'cover',
           backgroundPosition: 'right top',
           maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0) 70%)',

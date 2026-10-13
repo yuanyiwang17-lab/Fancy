@@ -37,7 +37,7 @@ export default function LibraryPage() {
       ) : reports.length === 0 ? (
         <div className="mt-16 flex flex-col items-center justify-center gap-4 text-center">
           <img
-            src="/assets/brand/empty-state.png"
+            src={publicAsset('/assets/brand/empty-state.png')}
             alt="empty"
             className="h-40 w-40 object-contain opacity-90"
             onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
@@ -69,7 +69,7 @@ export default function LibraryPage() {
             >
               <div className="relative h-32 overflow-hidden">
                 <img
-                  src={r.cover_image ?? '/assets/brand/report-cover.png'}
+                  src={r.cover_image ?? publicAsset('/assets/brand/report-cover.png')}
                   alt={r.title}
                   className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
@@ -103,3 +103,4 @@ export default function LibraryPage() {
     </div>
   )
 }
+import { publicAsset } from '../lib/deployment'

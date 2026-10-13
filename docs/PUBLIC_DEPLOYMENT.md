@@ -1,6 +1,10 @@
 # Fancy 公网部署
 
-当前公网方案使用 Render Static Site，仅发布 React 页面和公开素材，不启动后端，也不配置任何 API 密钥。本机报告和数据库不随源码公开。
+当前公网方案使用 GitHub Pages，仅发布 React 页面和公开素材，不启动后端，也不配置任何 API 密钥。本机报告和数据库不随源码公开。
+
+站点地址：`https://yuanyiwang17-lab.github.io/Fancy/`。在 `main` 分支执行 `VITE_PUBLIC_READ_ONLY=true npm --prefix frontend run build -- --base=/Fancy/`，把 `frontend/dist` 的内容发布到 `gh-pages` 分支，并在 GitHub Pages 设置中使用该分支根目录。静态资源使用 `/Fancy/` 前缀，导航使用 HashRouter。
+
+Render 是可选托管方案，但当前账号在创建免费服务时要求银行卡身份验证，因此首次上线使用 GitHub Pages。
 
 静态构建命令：`npm --prefix frontend ci && VITE_PUBLIC_READ_ONLY=true npm --prefix frontend run build`。发布目录：`frontend/dist`。配置 `/*` 到 `/index.html` 的 Rewrite，以支持报告和专家页等前端路由。
 

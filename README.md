@@ -10,7 +10,15 @@ Fancy 的公开展示版本，基于 [kangjiayao14/VerdaAI-Investigator](https:/
 
 此仓库不包含 API 密钥、本机报告数据库或运行日志。Render 不需要配置模型或搜索 API 密钥。
 
-## Render 免费部署
+## GitHub Pages 免费部署
+
+公开站点：[Fancy](https://yuanyiwang17-lab.github.io/Fancy/)。静态文件发布在 `gh-pages` 分支，不启动 Python 后端，也没有 API 密钥。
+
+构建命令：`VITE_PUBLIC_READ_ONLY=true npm --prefix frontend run build -- --base=/Fancy/`。公网版使用 HashRouter，确保导航与刷新均适用于静态托管。
+
+`main` 分支保留源代码，`gh-pages` 分支只存构建结果。已有私有报告不会自动发布。
+
+## 可选的 Render 静态部署
 
 在 Render 创建 Static Site 并选择本仓库。构建命令为 `npm --prefix frontend ci && VITE_PUBLIC_READ_ONLY=true npm --prefix frontend run build`，发布目录为 `frontend/dist`。`render.yaml` 也提供相应静态站点配置。
 

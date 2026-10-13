@@ -40,7 +40,7 @@ import { VDecisionReplay } from '../components/VDecisionReplay'
 import { VDataGrid } from '../components/VDataGrid'
 import { VFeatureMatrix, VPricingTable, VPersonaCards } from '../components/VStructured'
 import { refineSection, submitFeedback } from '../lib/api'
-import { PUBLIC_READ_ONLY } from '../lib/deployment'
+import { PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
 import { VSkeleton, VCountUp } from '../components/ui'
 
 const HL_DOT: Record<HighlightColor, string> = {
@@ -301,7 +301,7 @@ export default function ReportPage() {
         {/* 杂志封面 */}
         <div className="relative overflow-hidden">
           <img
-            src={r.cover_image ?? '/assets/brand/report-cover.png'}
+            src={r.cover_image ?? publicAsset('/assets/brand/report-cover.png')}
             alt="cover"
             className="h-60 w-full object-cover"
             onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
