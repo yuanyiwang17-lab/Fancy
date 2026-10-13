@@ -1,5 +1,7 @@
 # Fancy
 
+Fancy AI research workspace
+
 Fancy 的公开展示版本，基于 [kangjiayao14/VerdaAI-Investigator](https://github.com/kangjiayao14/VerdaAI-Investigator) 改编，遵循仓库中的 AGPL-3.0 许可证。
 
 ## 公网模式
