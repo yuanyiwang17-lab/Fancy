@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fancy
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: FANCY_PUBLIC_READ_ONLY
+        value: "true"
+      - key: VERDA_DB_PATH
+        value: /data/fancy.db
+      - key: PORT
+        value: "10000"

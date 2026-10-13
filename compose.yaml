@@ -1,0 +1,14 @@
+services:
+  fancy:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      FANCY_PUBLIC_READ_ONLY: "true"
+      VERDA_DB_PATH: /data/fancy.db
+      PORT: "8080"
+    volumes:
+      - fancy-data:/data
+    restart: unless-stopped
+volumes:
+  fancy-data:
