@@ -35,7 +35,7 @@ export interface StreamMessage {
 
 const BASE_NODES: DAGNode[] = [
   { id: 'intake', label: '需求理解', status: 'idle' },
-  { id: 'orchestrator', label: '编排派遣', status: 'idle' },
+  { id: 'orchestrator', label: '任务分工', status: 'idle' },
   { id: 'collect', label: '证据采集', status: 'idle' },
   { id: 'analyze', label: '交叉分析', status: 'idle' },
   { id: 'write', label: '报告撰写', status: 'idle' },

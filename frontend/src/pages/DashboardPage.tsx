@@ -10,7 +10,7 @@ import {
   fetchDashboard, fetchEvidences, fetchSubscriptions,
   createSubscription, deleteSubscription, fetchWorkload,
 } from '../lib/api'
-import { PUBLIC_READ_ONLY } from '../lib/deployment'
+import { BROWSER_RESEARCH, PUBLIC_READ_ONLY } from '../lib/deployment'
 import type {
   DashboardStats, EvidenceQueryResp, EvidenceRecord, Subscription, ExpertWorkload,
 } from '../types'
@@ -209,7 +209,7 @@ export default function DashboardPage() {
             <StatCard icon={Sparkles} value={stats!.claim_total} label="产出结论"
               tip="全部报告输出的分析结论总数" />
             <StatCard icon={ShieldCheck} value={stats!.fact_accuracy} unit="%" color="text-ok"
-              label="交叉验证率" tip="经 ≥2 个独立来源相互印证的结论占比（真实计算，越高越可信）" />
+              label={BROWSER_RESEARCH ? '多来源结论占比' : '交叉验证率'} tip={BROWSER_RESEARCH ? '引用至少两个不同域名的结论占比，不代表事实已经核实' : '经 ≥2 个独立来源相互印证的结论占比（真实计算，越高越可信）'} />
           </motion.div>
 
           {/* 1.5 业务闭环价值（相比人工的真实可量化提升）*/}
@@ -430,10 +430,11 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2 text-aux font-semibold text-ink">
                   <Bell size={16} className="text-primary" /> 竞品持续追踪
                 </div>
-                <p className="mt-1 text-tag text-ink-3">订阅一个赛道，一键复跑获取最新动态</p>
+                <p className="mt-1 text-tag text-ink-3">{BROWSER_RESEARCH ? '浏览器版不执行后台订阅，可返回工作台手动发起新的调研。' : '订阅一个赛道，一键复跑获取最新动态'}</p>
 
                 <div className="mt-3 flex gap-2">
                   <input
+                    disabled={BROWSER_RESEARCH}
                     value={subQuery}
                     onChange={(e) => setSubQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleCreateSub()}
@@ -441,6 +442,7 @@ export default function DashboardPage() {
                     className="h-10 flex-1 rounded-btn border border-line bg-bg px-3 text-aux text-ink outline-none focus:border-primary-soft"
                   />
                   <button
+                    disabled={BROWSER_RESEARCH}
                     onClick={handleCreateSub}
                     className="grid h-10 w-10 place-items-center rounded-btn bg-primary text-white hover:bg-primary-deep"
                   >

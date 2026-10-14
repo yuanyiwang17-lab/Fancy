@@ -1,5 +1,6 @@
 import { ShieldCheck, AlertTriangle, Lightbulb, ArrowRight, CheckCircle2 } from 'lucide-react'
 import type { AuditReview, AuditOpinion } from '../types'
+import { BROWSER_RESEARCH } from '../lib/deployment'
 
 /** 质检审裁：展示质检官对分析产物的真实审阅——逐维度打分、问题、改进建议，
  *  以及返工前后的对比改善（对应评分维度：反馈闭环真实可触发、重做后有改善）。 */
@@ -9,7 +10,7 @@ export function VAuditReview({ review }: { review?: AuditReview }) {
   const after = review.after
   const hasRework = (review.rework_rounds ?? 0) > 0 && after && after !== before
   // 主展示用复审结果（若有返工），否则用初审
-  const main: AuditOpinion = (hasRework ? after : before) || {}
+  const main: AuditOpinion = (hasRework ? after : before) || after || {}
   const scoreKeys = Object.keys(main.scores ?? {})
   const verdictPass = main.verdict !== 'rework'
 
@@ -31,13 +32,13 @@ export function VAuditReview({ review }: { review?: AuditReview }) {
           <ShieldCheck size={17} />
         </span>
         <div className="flex-1">
-          <div className="text-aux font-semibold text-ink">质检审裁 · 质检官终审意见</div>
-          <div className="text-tag text-ink-3">质量检查对分析结果逐维度评分、指出问题并给出修改建议</div>
+          <div className="text-aux font-semibold text-ink">{BROWSER_RESEARCH ? '质量检查 · 模型审阅意见' : '质检审裁 · 质检官终审意见'}</div>
+          <div className="text-tag text-ink-3">{BROWSER_RESEARCH ? '引用编号已检查；以下意见由模型生成，仍需人工核对来源内容。' : '质量检查对分析结果逐维度评分、指出问题并给出修改建议'}</div>
         </div>
         <span className={`rounded-chip px-3 py-1 text-tag font-semibold ${
           verdictPass ? 'bg-ok/15 text-ok' : 'bg-risk/15 text-risk'
         }`}>
-          {verdictPass ? '✓ 达标签发' : '⟲ 触发返工'}
+          {BROWSER_RESEARCH ? '待人工复核' : verdictPass ? '✓ 达标签发' : '⟲ 触发返工'}
         </span>
       </div>
 

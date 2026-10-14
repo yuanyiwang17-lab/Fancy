@@ -9,5 +9,5 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      - key: VITE_PUBLIC_READ_ONLY
+      - key: VITE_BROWSER_RESEARCH
         value: "true"

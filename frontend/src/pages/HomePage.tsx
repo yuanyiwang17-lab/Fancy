@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ArrowUp,
@@ -21,14 +21,15 @@ import { fadeUp, stagger } from '../lib/motion'
 import { useUIStore } from '../store/uiStore'
 import { useExpertStore } from '../store/expertStore'
 import { createTask } from '../lib/api'
-import { PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
+import { BROWSER_RESEARCH, PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
+import { isConfigured } from '../lib/browserConfig'
 
 const MODELS = ['Auto', 'GLM-5.2', 'GLM-5.1', 'GLM-Z1-Air', 'GLM-4-Plus']
 
 const MODE_OPTIONS = [
-  { key: 'quick', icon: Zap, label: '快速', desc: '5 章 · 约 2 分钟 · 速览' },
-  { key: 'deep', icon: Gem, label: '深度', desc: '9 章 · 约 4 分钟 · 含返工闭环' },
-  { key: 'expert', icon: Crown, label: '专家级', desc: '12+ 章 · 约 6-8 分钟 · 创新板块+最深' },
+  { key: 'quick', icon: Zap, label: '快速', desc: BROWSER_RESEARCH ? '5 章 · 轻量调研' : '5 章 · 约 2 分钟 · 速览' },
+  { key: 'deep', icon: Gem, label: '深度', desc: BROWSER_RESEARCH ? '9 章 · 完整报告' : '9 章 · 约 4 分钟 · 含返工闭环' },
+  { key: 'expert', icon: Crown, label: '专家级', desc: BROWSER_RESEARCH ? '12 章 · 包含反证与行动建议' : '12+ 章 · 约 6-8 分钟 · 创新板块+最深' },
 ]
 
 const EXAMPLES = [
@@ -102,7 +103,9 @@ function ModelPicker() {
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const [text, setText] = useState('')
+  const location = useLocation()
+  const [text, setText] = useState(typeof location.state?.draft === 'string' ? location.state.draft : '')
+  const [error, setError] = useState('')
   const [mode, setMode] = useState('deep')
   const [submitting, setSubmitting] = useState(false)
   const taRef = useRef<HTMLTextAreaElement>(null)
@@ -116,11 +119,18 @@ export default function HomePage() {
     }
     const query = q.trim()
     if (!query || submitting) return
+    if (BROWSER_RESEARCH && !isConfigured()) {
+      navigate('/settings', { state: { draft: query } })
+      return
+    }
+    setError('')
     setSubmitting(true)
     try {
       const resp = await createTask(query, mode)
       if (resp.needClarify) navigate(`/clarify/${resp.taskId}`, { state: { query, clarify: resp.clarifyQuestions } })
       else navigate(`/workspace/${resp.taskId}`, { state: { query } })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '调研启动失败，请检查 API 设置')
     } finally {
       setSubmitting(false)
     }
@@ -174,6 +184,12 @@ export default function HomePage() {
         </motion.p>
 
         {/* 大输入框 */}
+        {BROWSER_RESEARCH && (
+          <div className="mt-6 flex w-full flex-wrap items-center justify-between gap-3 rounded-card border border-line bg-primary-tint p-4 text-aux text-ink-2">
+            <span>{isConfigured() ? '使用你自己的 API 发起调研，报告保存在此浏览器。' : '首次使用请配置你自己的模型和搜索 API。'}</span>
+            <button onClick={() => navigate('/settings', { state: { draft: text } })} className="font-medium text-primary-deep">API 设置 →</button>
+          </div>
+        )}
         {PUBLIC_READ_ONLY && (
           <div className="mt-6 w-full rounded-card border border-line bg-primary-tint p-4 text-aux text-ink-2">
             当前为公开展示版，可浏览已发布的报告、知识库和专家资料。
@@ -225,14 +241,15 @@ export default function HomePage() {
           <div className="mt-2 flex items-center justify-between">
             <span className="text-tag text-ink-3">4 个工作角色 · 来源可追溯 · 报告带引用</span>
             <div className="flex items-center gap-2">
-              <ModelPicker />
-              <button
+              {BROWSER_RESEARCH ? <button onClick={() => navigate('/settings', { state: { draft: text } })} className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-primary-tint px-3 text-aux text-primary-deep"><Cpu size={15} /> API 设置</button> : <ModelPicker />}
+              {!BROWSER_RESEARCH && <button
                 title="上传附件"
                 className="grid h-9 w-9 place-items-center rounded-full text-ink-3 transition-colors hover:bg-primary-tint hover:text-primary-deep"
               >
                 <Paperclip size={18} />
-              </button>
+              </button>}
               <button
+                aria-label="开始调研"
                 onClick={() => submit(text)}
                 disabled={PUBLIC_READ_ONLY || !text.trim() || submitting}
                 className="grid h-11 w-11 place-items-center rounded-full bg-primary text-white shadow-card transition-all hover:scale-105 hover:bg-primary-deep active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
@@ -242,6 +259,8 @@ export default function HomePage() {
             </div>
           </div>
         </motion.div>
+        {error && <p role="alert" className="mt-3 w-full text-aux text-red-600">{error}</p>}
+        {BROWSER_RESEARCH && <p className="mt-3 w-full text-tag text-ink-3">生成会消耗你自己的模型和搜索额度，请保持此页面打开。资料来自搜索摘要，重要结论请核对来源。</p>}
 
         {/* 示例卡 */}
         <p className="mt-9 text-aux text-ink-3">试试这些示例</p>
@@ -255,7 +274,7 @@ export default function HomePage() {
             <motion.button
               key={ex.title}
               variants={fadeUp}
-              onClick={() => submit(ex.q)}
+              onClick={() => { if (BROWSER_RESEARCH) { setText(ex.q); taRef.current?.focus() } else void submit(ex.q) }}
               className="group flex flex-col rounded-card border border-line/60 bg-card/80 p-4 text-left shadow-card backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-float"
             >
               <span className="grid h-9 w-9 place-items-center rounded-btn bg-primary-tint text-primary">

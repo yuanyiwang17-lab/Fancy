@@ -10,6 +10,7 @@ import {
   Library,
 } from 'lucide-react'
 import { fetchDashboard } from '../lib/api'
+import { BROWSER_RESEARCH } from '../lib/deployment'
 
 const navItems = [
   { to: '/', label: '工作台', icon: Home, end: true },
@@ -25,12 +26,15 @@ export default function VSidebar() {
   const [evidence, setEvidence] = useState(0)
 
   useEffect(() => {
-    fetchDashboard().then((d) => {
+    function refresh() { fetchDashboard().then((d) => {
       if (d) {
         setReports(d.reports)
         setEvidence(d.evidence_total)
       }
-    })
+    }).catch(() => {}) }
+    refresh()
+    window.addEventListener('fancy-report-changed', refresh)
+    return () => window.removeEventListener('fancy-report-changed', refresh)
   }, [])
 
   return (
@@ -69,6 +73,7 @@ export default function VSidebar() {
           </NavLink>
         ))}
       </nav>
+      {BROWSER_RESEARCH && <button onClick={() => navigate('/settings')} className="mx-3 mb-3 rounded-btn border border-line px-3 py-2 text-left text-aux text-primary-deep">API 设置</button>}
 
       {/* 工作空间用量卡片 */}
       <div className="mx-3 mb-3 rounded-card border border-line/70 bg-primary-tint/40 p-4">

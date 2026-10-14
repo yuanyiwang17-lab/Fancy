@@ -40,7 +40,7 @@ import { VDecisionReplay } from '../components/VDecisionReplay'
 import { VDataGrid } from '../components/VDataGrid'
 import { VFeatureMatrix, VPricingTable, VPersonaCards } from '../components/VStructured'
 import { refineSection, submitFeedback } from '../lib/api'
-import { PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
+import { BROWSER_RESEARCH, PUBLIC_READ_ONLY, publicAsset } from '../lib/deployment'
 import { VSkeleton, VCountUp } from '../components/ui'
 
 const HL_DOT: Record<HighlightColor, string> = {
@@ -236,7 +236,7 @@ export default function ReportPage() {
     { icon: FileText, label: '核心结论', value: r.claims.length, unit: '条' },
     { icon: Database, label: '联网证据', value: r.evidence.length, unit: '条' },
     { icon: Layers, label: '独立信源', value: indepDomains, unit: '个' },
-    { icon: ShieldCheck, label: '高置信占比', value: confRate, unit: '%' },
+    { icon: ShieldCheck, label: BROWSER_RESEARCH ? '多来源结论占比' : '高置信占比', value: confRate, unit: '%' },
   ]
 
   return (
@@ -318,7 +318,7 @@ export default function ReportPage() {
             <p className="mt-2 max-w-2xl text-aux text-white/85">{r.subtitle}</p>
             <div className="mt-3 flex flex-wrap items-center gap-4 text-tag text-white/75">
               <span className="inline-flex items-center gap-1"><Calendar size={13} /> {r.created_at}</span>
-              <span className="inline-flex items-center gap-1"><Users size={13} /> {r.experts.length} 位专家</span>
+              <span className="inline-flex items-center gap-1"><Users size={13} /> {r.experts.length} 个工作角色</span>
               <span className="inline-flex items-center gap-1"><Quote size={13} /> {r.claims.length} 条结论 · {r.evidence.length} 条证据</span>
             </div>
           </div>
@@ -381,7 +381,8 @@ export default function ReportPage() {
           />
 
           {/* 效能与业务闭环指标 + 质检返工闭环 */}
-          <VMetricsPanel metrics={r.metrics} />
+          {!BROWSER_RESEARCH && <VMetricsPanel metrics={r.metrics} />}
+          {BROWSER_RESEARCH && <p className="mb-6 rounded-card bg-primary-tint p-4 text-aux leading-relaxed text-ink-2">报告保存在当前浏览器。来源来自搜索摘要，未抓取网页全文；多来源仅表示引用了不同域名，不代表事实已核实。重要结论请打开证据链接复核。</p>}
           <VAuditReview review={r.audit_review} />
           <VQualityGate before={r.quality_before} after={r.quality_after} />
           {r.sections.map((sec, idx) => (

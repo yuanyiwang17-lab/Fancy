@@ -12,10 +12,11 @@ import ExpertDetailPage from './pages/ExpertDetailPage'
 import LibraryPage from './pages/LibraryPage'
 import DashboardPage from './pages/DashboardPage'
 import KnowledgePage from './pages/KnowledgePage'
+import ApiSettingsPage from './pages/ApiSettingsPage'
 import { useExpertStore } from './store/expertStore'
-import { PUBLIC_READ_ONLY } from './lib/deployment'
+import { STATIC_SITE } from './lib/deployment'
 
-const Router = PUBLIC_READ_ONLY ? HashRouter : BrowserRouter
+const Router = STATIC_SITE ? HashRouter : BrowserRouter
 
 export default function App() {
   const load = useExpertStore((s) => s.load)
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/experts" element={<ExpertsPage />} />
           <Route path="/experts/:id" element={<ExpertDetailPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/settings" element={<ApiSettingsPage />} />
         </Route>
 
         {/* 全屏沉浸页：澄清 / 工作台 / 报告 / 图谱 */}

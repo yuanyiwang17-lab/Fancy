@@ -11,12 +11,15 @@ import type {
   Subscription,
   TraceSpan,
 } from '../types'
-import { PUBLIC_READ_ONLY, publicAsset } from './deployment'
+import { BROWSER_RESEARCH, PUBLIC_READ_ONLY, STATIC_SITE, publicAsset } from './deployment'
+import { getBrowserConfig, validateConfig } from './browserConfig'
+import * as browserStorage from './browserStorage'
+import { refineBrowserSection, runBrowserResearch, uid } from './browserResearch'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
 
 async function safeJson<T>(path: string, init?: RequestInit, fallback?: T): Promise<T> {
-  if (PUBLIC_READ_ONLY) {
+  if (STATIC_SITE) {
     if (fallback !== undefined) return fallback
     throw new Error('公开展示版未开放此操作')
   }
@@ -32,7 +35,7 @@ async function safeJson<T>(path: string, init?: RequestInit, fallback?: T): Prom
 
 /* 工作角色：优先后端，失败回退本地 JSON（绝不白屏） */
 export async function fetchExperts(): Promise<Expert[]> {
-  if (PUBLIC_READ_ONLY) {
+  if (STATIC_SITE) {
     const local = await fetch(publicAsset('/assets/experts.json'))
     const experts = (await local.json()) as Expert[]
     return experts.map((expert) => ({ ...expert, avatar: expert.avatar.startsWith('/') ? publicAsset(expert.avatar) : expert.avatar }))
@@ -52,6 +55,12 @@ export async function fetchExperts(): Promise<Expert[]> {
 }
 
 export async function createTask(query: string, mode: string = 'deep'): Promise<CreateTaskResp> {
+  if (BROWSER_RESEARCH) {
+    validateConfig(getBrowserConfig())
+    const taskId = uid('t')
+    await browserStorage.putTask({ id: taskId, query, mode, status: 'ready' })
+    return { taskId, needClarify: false }
+  }
   if (PUBLIC_READ_ONLY) throw new Error('公开展示版未开放新调研')
   return safeJson<CreateTaskResp>(
     '/api/tasks',
@@ -80,11 +89,13 @@ export async function submitClarify(
 }
 
 export async function fetchReport(reportId: string): Promise<Report | null> {
+  if (BROWSER_RESEARCH) return (await browserStorage.getReport(reportId)) || null
   return safeJson<Report | null>(`/api/reports/${reportId}`, undefined, null)
 }
 
 /* 报告决策链路 Trace（决策回放 / Trace 页签） */
 export async function fetchReportTrace(reportId: string): Promise<{ spans: TraceSpan[] }> {
+  if (BROWSER_RESEARCH) return { spans: (await browserStorage.getReport(reportId))?.trace || [] }
   return safeJson<{ spans: TraceSpan[] }>(`/api/reports/${reportId}/trace`, undefined, { spans: [] })
 }
 
@@ -95,6 +106,7 @@ export async function submitFeedback(
   totalBlocks: number,
   data: Record<string, unknown> = {},
 ): Promise<{ ok: boolean }> {
+  if (BROWSER_RESEARCH) return { ok: true }
   return safeJson(
     `/api/reports/${reportId}/feedback`,
     {
@@ -112,6 +124,15 @@ export async function refineSection(
   sectionId: string,
   annotations: string[],
 ): Promise<{ ok: boolean; section?: ReportSection; message?: string }> {
+  if (BROWSER_RESEARCH) {
+    try {
+      const report = await browserStorage.getReport(reportId)
+      if (!report) throw new Error('本浏览器中没有这份报告')
+      const section = await refineBrowserSection(report, sectionId, annotations, getBrowserConfig())
+      await browserStorage.putReport({ ...report, sections: report.sections.map((s) => s.id === sectionId ? section : s) })
+      return { ok: true, section }
+    } catch (error) { return { ok: false, message: error instanceof Error ? error.message : '修改失败' } }
+  }
   return safeJson(
     `/api/reports/${reportId}/refine`,
     {
@@ -125,11 +146,13 @@ export async function refineSection(
 
 /* 我的调研：真实历史报告列表 */
 export async function fetchReports(): Promise<ReportCard[]> {
+  if (BROWSER_RESEARCH) return browserStorage.reportCards()
   return safeJson<ReportCard[]>('/api/reports', undefined, [])
 }
 
 /* 仪表盘真实统计 */
 export async function fetchDashboard(): Promise<DashboardStats | null> {
+  if (BROWSER_RESEARCH) return browserStorage.dashboard()
   return safeJson<DashboardStats | null>('/api/dashboard', undefined, null)
 }
 
@@ -139,6 +162,7 @@ export async function fetchEvidences(params?: {
   source_type?: string
   min_cred?: number
 }): Promise<EvidenceQueryResp> {
+  if (BROWSER_RESEARCH) return browserStorage.evidenceQuery(params)
   const qs = new URLSearchParams()
   if (params?.brand) qs.set('brand', params.brand)
   if (params?.source_type) qs.set('source_type', params.source_type)
@@ -152,6 +176,7 @@ export async function fetchEvidences(params?: {
 
 /* 竞品监控订阅 */
 export async function fetchSubscriptions(): Promise<Subscription[]> {
+  if (BROWSER_RESEARCH) return []
   return safeJson<Subscription[]>('/api/subscriptions', undefined, [])
 }
 
@@ -184,6 +209,40 @@ export interface SSEHandlers {
 }
 
 export function openTaskStream(taskId: string, handlers: SSEHandlers): () => void {
+  if (BROWSER_RESEARCH) {
+    const controller = new AbortController()
+    let mounted = true
+    void (async () => {
+      const task = await browserStorage.getTask(taskId)
+      if (!mounted) return
+      if (!task) throw new Error('本浏览器中没有这个任务，请返回工作台重新发起调研')
+      if (task.reportId) { handlers.onEvent('done', { reportId: task.reportId }); return }
+      if (task.status !== 'ready') throw new Error('上次调研已中断。为避免自动重复消耗额度，请返回工作台手动发起新调研')
+      handlers.onOpen?.()
+      const config = getBrowserConfig()
+      validateConfig(config)
+      await browserStorage.putTask({ ...task, status: 'running' })
+      if (!mounted) return
+      try {
+        const report = await runBrowserResearch(task, config, (type, data) => {
+          if (mounted) handlers.onEvent(type, data)
+        }, controller.signal)
+        if (!mounted) return
+        await browserStorage.putReport(report)
+        await browserStorage.putTask({ ...task, status: 'done', reportId: report.id })
+        handlers.onEvent('node_update', { node: 'done', status: 'done', expert: 'L3-001' })
+        handlers.onEvent('progress', { percent: 100, stage: 'done', evidence_count: report.evidence.length, token_used: Number(report.metrics?.efficiency?.tokens_used) || 0 })
+        handlers.onEvent('report_ready', { reportId: report.id })
+        handlers.onEvent('done', { reportId: report.id })
+      } catch (error) {
+        await browserStorage.putTask({ ...task, status: 'error' })
+        throw error
+      }
+    })().catch((error) => {
+      if (mounted) handlers.onEvent('error', { message: error instanceof Error ? error.message : '调研失败' })
+    })
+    return () => { mounted = false; controller.abort() }
+  }
   if (PUBLIC_READ_ONLY) {
     handlers.onEvent('error', { message: '公开展示版未开放新调研，请浏览已发布报告。' })
     return () => {}

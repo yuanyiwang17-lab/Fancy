@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { ExternalLink, FileText } from 'lucide-react'
 import type { Evidence } from '../types'
+import { BROWSER_RESEARCH } from '../lib/deployment'
 
 const SOURCE_LABEL: Record<string, string> = {
   douyin: '抖音',
@@ -24,7 +25,7 @@ const SOURCE_CLS: Record<string, string> = {
 
 /** 单条证据卡。credibility 为 0-100 整数。 */
 export function VEvidenceCard({ ev, index, highlighted }: { ev: Evidence; index?: number; highlighted?: boolean }) {
-  const label = SOURCE_LABEL[ev.source_type] ?? ev.source_type
+  const label = BROWSER_RESEARCH ? '搜索摘要' : SOURCE_LABEL[ev.source_type] ?? ev.source_type
   const cls = SOURCE_CLS[ev.source_type] ?? 'bg-primary-tint text-primary-deep'
   // 兼容旧数据：>1 视为 0-100 整数，<=1 视为 0-1 小数
   const credPct = ev.credibility > 1 ? Math.round(ev.credibility) : Math.round(ev.credibility * 100)
@@ -55,7 +56,7 @@ export function VEvidenceCard({ ev, index, highlighted }: { ev: Evidence; index?
           <span className="rounded-chip bg-paper px-1.5 h-5 inline-flex items-center text-tag text-ink-3">{freshLabel}</span>
         )}
         <span className="ml-auto inline-flex items-center gap-1 text-tag text-ink-3">
-          可信度 {credPct}
+          {BROWSER_RESEARCH ? '待核验' : `可信度 ${credPct}`}
         </span>
       </div>
       <div className="mt-2 flex items-start gap-1.5">

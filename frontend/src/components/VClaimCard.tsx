@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { ShieldCheck, ShieldAlert, ShieldQuestion, Link2 } from 'lucide-react'
 import type { Claim } from '../types'
 import { useExpertStore } from '../store/expertStore'
+import { BROWSER_RESEARCH } from '../lib/deployment'
 
 const CONF_META = {
   high: { label: '高置信', cls: 'bg-ok/15 text-ok', icon: ShieldCheck },
@@ -31,9 +32,9 @@ export function VClaimCard({
       <p className="text-body text-ink">{claim.text}</p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <span className={`inline-flex items-center gap-1 rounded-chip px-2.5 h-6 text-tag font-medium ${meta.cls}`}>
-          <Icon size={12} /> {meta.label}
+          <Icon size={12} /> {BROWSER_RESEARCH ? claim.cross_validated ? '多来源引用' : '单来源引用' : meta.label}
         </span>
-        {claim.cross_validated && (
+        {claim.cross_validated && !BROWSER_RESEARCH && (
           <span className="inline-flex items-center gap-1 rounded-chip bg-primary-tint px-2.5 h-6 text-tag font-medium text-primary-deep">
             交叉验证
           </span>

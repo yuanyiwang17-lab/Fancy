@@ -19,6 +19,7 @@ import { VAgentStream } from '../components/VAgentStream'
 import { VEvidenceFeed } from '../components/VEvidenceFeed'
 import { VTracePanel } from '../components/VTracePanel'
 import { VCountUp } from '../components/ui'
+import { BROWSER_RESEARCH } from '../lib/deployment'
 
 export default function WorkspacePage() {
   const { taskId } = useParams()
@@ -89,7 +90,7 @@ export default function WorkspacePage() {
       </header>
 
       {error && (
-        <div className="bg-risk/10 px-5 py-2 text-aux text-risk">采集流中断：{error}（已尽量降级，可返回重试）</div>
+        <div className="bg-risk/10 px-5 py-2 text-aux text-risk">{BROWSER_RESEARCH ? `调研未完成：${error}。请返回工作台检查配置或重新发起。` : `采集流中断：${error}（已尽量降级，可返回重试）`}</div>
       )}
 
       {/* 三栏主体 */}
@@ -217,7 +218,7 @@ export default function WorkspacePage() {
       </div>
 
       {/* 悬浮可拖拽决策日志面板（可观测性 Trace）*/}
-      <VTracePanel traces={traces} />
+      {!BROWSER_RESEARCH && <VTracePanel traces={traces} />}
     </div>
   )
 }
