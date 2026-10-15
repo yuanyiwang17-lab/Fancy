@@ -111,6 +111,7 @@ export default function HomePage() {
   const taRef = useRef<HTMLTextAreaElement>(null)
   const experts = useExpertStore((s) => s.experts)
   const wall = experts.slice(0, 14)
+  const needsApi = BROWSER_RESEARCH && !isConfigured()
 
   async function submit(q: string) {
     if (PUBLIC_READ_ONLY) {
@@ -118,9 +119,14 @@ export default function HomePage() {
       return
     }
     const query = q.trim()
-    if (!query || submitting) return
-    if (BROWSER_RESEARCH && !isConfigured()) {
+    if (submitting) return
+    if (needsApi) {
       navigate('/settings', { state: { draft: query } })
+      return
+    }
+    if (!query) {
+      setError('请先输入想调研的问题，或选择下方示例。')
+      taRef.current?.focus()
       return
     }
     setError('')
@@ -249,12 +255,13 @@ export default function HomePage() {
                 <Paperclip size={18} />
               </button>}
               <button
-                aria-label="开始调研"
+                aria-label={needsApi ? '配置 API' : '开始调研'}
+                title={needsApi ? '先填写你自己的模型和搜索 API' : '开始调研'}
                 onClick={() => submit(text)}
-                disabled={PUBLIC_READ_ONLY || !text.trim() || submitting}
-                className="grid h-11 w-11 place-items-center rounded-full bg-primary text-white shadow-card transition-all hover:scale-105 hover:bg-primary-deep active:scale-95 disabled:opacity-40 disabled:hover:scale-100"
+                disabled={PUBLIC_READ_ONLY || (!BROWSER_RESEARCH && !text.trim()) || submitting}
+                className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 bg-primary text-white shadow-card transition-all hover:bg-primary-deep active:scale-95 disabled:opacity-40 ${BROWSER_RESEARCH ? 'rounded-btn px-4' : 'w-11 rounded-full'}`}
               >
-                <ArrowUp size={20} />
+                <ArrowUp size={20} />{BROWSER_RESEARCH && <span className="text-aux font-medium">{submitting ? '正在启动…' : needsApi ? '配置 API' : '开始调研'}</span>}
               </button>
             </div>
           </div>
